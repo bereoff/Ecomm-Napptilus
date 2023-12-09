@@ -1,12 +1,10 @@
 import json
 from datetime import datetime
 from decimal import Decimal
-from os import name
-from unicodedata import category
 
-from django.db.models import Case, CharField, F, IntegerField, Value, When
+from django.db.models import Case, IntegerField, When
 # from django.shortcuts import get_object_or_404
-from rest_framework import generics, response, status, views, viewsets
+from rest_framework import generics, response, status, views
 
 from utils.product_creation import ProductCreation
 
@@ -91,4 +89,6 @@ class NewProductView(views.APIView):
                     attribute=attribute_obj
                 )
 
-        return response.Response(status=status.HTTP_201_CREATED)
+        serializer = ProductSerializer(product_obj).data
+
+        return response.Response(data=serializer, status=status.HTTP_201_CREATED)
