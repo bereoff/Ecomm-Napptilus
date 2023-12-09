@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 
-class ProductCreation:
+class ProductHandler:
 
     def __init__(self, product_dict):
         self.product_dict = product_dict
@@ -12,12 +12,17 @@ class ProductCreation:
             secondary_color=self.product_dict.get("secondary_color"),
             brand=self.product_dict.get("brand"),
             price=Decimal(self.product_dict.get("price")),
-            initial_stock=int(self.product_dict.get("initial_stock")),
+            initial_stock=int(self.product_dict.get(
+                "initial_stock")) if self.product_dict.get("initial_stock") else None,
             current_stock=int(self.product_dict.get("current_stock"))
         )
 
-    def product_specific_fields(self) -> list:
+    def product_specific_fields(self) -> dict:
         data = self.product_base_fields()
 
-        return {k: self.product_dict[k]
-                for k in set(self.product_dict) - set(data)}
+        specific_fields = {k: self.product_dict[k]
+                           for k in set(self.product_dict) - set(data)}
+
+        # specific_fields.pop("category")
+
+        return specific_fields
