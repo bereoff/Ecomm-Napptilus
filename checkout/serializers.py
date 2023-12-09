@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Product
+from .models import Product, ProductAttribute, ProductCategory
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -21,3 +21,16 @@ class ProductSerializer(serializers.ModelSerializer):
             attributes_list.append(pair)
 
         return attributes_list
+
+
+class ProductAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttribute
+        fields = "__all__"
+
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductCategory
+        fields = "__all__"

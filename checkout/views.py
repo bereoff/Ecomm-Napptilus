@@ -8,7 +8,8 @@ from rest_framework import generics, response, status, views
 from utils.product_handler import ProductHandler
 
 from . import models
-from .serializers import ProductSerializer
+from .serializers import (ProductAttributeSerializer,
+                          ProductCategorySerializer, ProductSerializer)
 
 
 class ListProductView(generics.ListAPIView):
@@ -21,6 +22,17 @@ class ListProductView(generics.ListAPIView):
                 When(category__name="Cap", then=1),
                 output_field=IntegerField())
         ).order_by('custom_order').order_by('-created_at')
+
+
+class ProductCategoryView(generics.ListAPIView):
+    queryset = models.ProductCategory.objects.all()
+    serializer_class = ProductCategorySerializer
+
+
+class ProductAttributeView(generics.ListAPIView):
+    queryset = models.ProductAttribute.objects.all().order_by(
+        "-created_at", "description")
+    serializer_class = ProductAttributeSerializer
 
 
 class NewProductView(views.APIView):
