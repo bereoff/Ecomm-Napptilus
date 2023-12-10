@@ -137,7 +137,7 @@ from dynaconf import DjangoDynaconf  # noqa
 
 settings = DjangoDynaconf(
     __name__,
-    load_dotenv=False,
+    load_dotenv=True,
     envvar_prefix='APP',
     env_switcher="APP_ENV",
     settings_files=["app_settings.toml"]
