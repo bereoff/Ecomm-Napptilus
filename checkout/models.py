@@ -59,19 +59,28 @@ class ProductAttributeValue(DefaultModel):
 class Cart(Model):
     PENDING = 'pending'
     PURCHASED = 'purchased'
-    EXPIRED = 'expired'
 
     CHOICES_STATE = (
         (PENDING, 'Pending'),
-        (PURCHASED, 'Purchased'),
-        (EXPIRED, 'Expired')
+        (PURCHASED, 'Purchased')
     )
     created_at = DateTimeField(
         auto_created=True, editable=False, auto_now_add=True, db_index=True)
     updated_at = DateTimeField(auto_now=True, db_index=True)
     session_id = CharField(max_length=255, null=True, blank=True)
-    state = CharField(choices=CHOICES_STATE, max_length=30)
-    products = ManyToManyField(Product, related_name='products_cart')
+    state = CharField(choices=CHOICES_STATE, max_length=30, default=PENDING)
+    products = ManyToManyField(
+        Product, related_name='products_cart', through='CartProduct')
 
     def __str__(self):
         return f"{self.session_id}-{self.created_at.today()}"
+
+
+class CartProduct(Model):
+    created_at = DateTimeField(
+        auto_created=True, editable=False, auto_now_add=True, db_index=True)
+    updated_at = DateTimeField(auto_now=True, db_index=True)
+    product = ForeignKey(
+        Product, related_name="product_interm_cart", on_delete=CASCADE)
+    cart = ForeignKey(
+        Cart, related_name="cart_interm_product", on_delete=CASCADE)
