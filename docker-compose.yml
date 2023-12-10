@@ -30,6 +30,9 @@ services:
       - DJANGO_SETTINGS_MODULE=core.settings
       - PYTHONPATH=/usr/src/app
       - PATH="${PATH}:/home/python/.local/bin"
+      - APP_REDIS_HOST="redis"
+      - APP_REDIS_PORT=6379
+
 
   
   postgres:
@@ -42,3 +45,36 @@ services:
       - POSTGRES_DB=ecomm
     volumes:
       - "app_pg_data:/var/lib/postgresql/data"
+
+  redis:
+    image: redis:6.2.5-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/redis
+  worker:
+    build: .
+    command: rq worker --with-scheduler --url redis://redis:6379
+    volumes:
+      - ./:/usr/src/app/
+      - ./media:/usr/src/app/media
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - APP_ALLOWED_HOSTS=["*"] 
+      - APP_DATABASES__default__ENGINE="django.db.backends.postgresql" 
+      - APP_DATABASES__default__NAME="ecomm" 
+      - APP_DATABASES__default__USER="admin"
+      - APP_DATABASES__default__PASSWORD="admin" 
+      - APP_DATABASES__default__HOST="postgres" 
+      - APP_MEDIA_ROOT="/usr/src/app/media" 
+      - APP_MEDIA_URL="/media/"
+      - APP_DOMAIN=http://0.0.0.0:8000/           
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - PYTHONPATH=/usr/src/app
+      - PATH="${PATH}:/home/python/.local/bin"
+      - APP_REDIS_HOST="redis"
+      - APP_REDIS_PORT=6379
+  

@@ -24,6 +24,8 @@ ENV PYTHONDONTWRITEBYTECODE="true" \
     APP_MEDIA_ROOT="/usr/src/app/media" \
     APP_MEDIA_URL="/media/" \
     APP_DOMAIN="http://0.0.0.0:8000/"\
+    APP_REDIS_HOST="redis"\
+    APP_REDIS_PORT=6379\
     DJANGO_SETTINGS_MODULE="core.settings" 
  
 

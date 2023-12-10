@@ -1,10 +1,10 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (AddProductCartView, ListCartView, ListProductView,
-                    NewProductView, ProductAttributeView, ProductCategoryView,
-                    ProductHardDeleteView, ProductSoftDeleteView,
-                    UpdateProductView)
+from .views import (AddProductCartView, CartPurchasedView, ListCartView,
+                    ListProductView, NewProductView, ProductAttributeView,
+                    ProductCategoryView, ProductHardDeleteView,
+                    ProductSoftDeleteView, UpdateProductView)
 
 router = DefaultRouter()
 
@@ -26,4 +26,6 @@ urlpatterns = [
          name="cart"),
     path("products/cart/new-product/", AddProductCartView.as_view(),
          name="add_to_cart"),
+    path("products/cart/purchased/", CartPurchasedView.as_view(),
+         name="purchased-cart"),
 ]
