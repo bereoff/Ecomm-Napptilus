@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from decimal import Decimal
 
@@ -7,11 +8,15 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, response, status, views
 
+from api.email_api.send_email import send_mail
 from utils.product_handler import ProductHandler
 
 from . import models
+from .queue import queue
 from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
+
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 
 
 class ListProductView(generics.ListAPIView):
@@ -303,3 +308,29 @@ class AddProductCartView(views.APIView):
                 return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
 
         return response.Response(status=status.HTTP_200_OK)
+
+
+class CartPurchasedView(views.APIView):
+    def post(self, request):
+
+        customer_data = json.loads(request.body)
+
+        session_id = request.COOKIES["session_id"]
+
+        cart = get_object_or_404(models.Cart, session_id=session_id,
+                                 state=models.Cart.PENDING,
+                                 created_at__date=datetime.today().date())
+        try:
+            cart.state = models.Cart.PURCHASED
+            cart.save()
+        except Exception:
+            msg = "Out of stock."
+            return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
+
+        try:
+            job = queue.enqueue(send_mail, customer_data, SENDGRID_API_KEY)
+
+        except Exception as e:
+            print(e)
+
+        return response.Response(data={"detail": {"job_id": job.id}}, status=status.HTTP_201_CREATED)
