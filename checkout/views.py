@@ -1,14 +1,16 @@
+import json
 from datetime import datetime
 from decimal import Decimal
 
 from django.db.models import Case, IntegerField, When
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, response, status, views
 
 from utils.product_handler import ProductHandler
 
 from . import models
-from .serializers import (ProductAttributeSerializer,
+from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
 
 
@@ -165,9 +167,6 @@ class UpdateProductView(generics.UpdateAPIView):
             current_value.attribute.description.title() for current_value in current_attribute_values]
         current_attributes.sort()
 
-        print(current_attribute_values)
-        print(current_attributes)
-
         if new_attributes == current_attributes and len(new_attributes) == len(current_attributes):
 
             for attr, value in new_attribute_values.items():
@@ -195,3 +194,112 @@ class UpdateProductView(generics.UpdateAPIView):
             serializer = ProductSerializer(product_obj).data
 
             return response.Response(data=serializer, status=status.HTTP_200_OK)
+
+
+class ProductSoftDeleteView(views.APIView):
+    def put(self, request):
+        product_data = json.loads(request.body)
+
+        products = list()
+        for product in product_data:
+            product_id = product.get("product_id")
+            product_state = product.get("is_deleted")
+
+            try:
+                models.Product.objects.get(pk=product_id)
+            except models.Product.DoesNotExist:
+                raise Http404
+
+            product_obj = models.Product.objects.filter(
+                pk=product_id).update(is_deleted=product_state)
+
+            products.append(product_obj)
+
+        return response.Response(status=status.HTTP_200_OK)
+
+
+class ProductHardDeleteView(generics.DestroyAPIView):
+    queryset = models.Product.objects_with_deleted.all()
+    serializer_class = ProductSerializer
+
+
+class ListCartView(views.APIView):
+
+    def get(self, request):
+        session_id = request.COOKIES["session_id"]
+
+        cart = models.Cart.objects.filter(
+            session_id=session_id, state=models.Cart.PENDING)
+
+        if not cart.exists():
+            return response.Response(data=list(), status=status.HTTP_200_OK)
+
+        products = cart.first().products.all()
+
+        total_products = cart.first().cart_interm_product.count()
+
+        serializer = ProductCartSerializer(products, many=True).data
+
+        return response.Response(data={"products": serializer, "total": total_products}, status=status.HTTP_200_OK)
+
+
+class AddProductCartView(views.APIView):
+    def post(self, request):
+
+        session_id = request.COOKIES["session_id"]
+        product_data = json.loads(request.body)
+
+        product_id = product_data.get("product_id")
+        product_quantity = product_data.get("quantity")
+
+        try:
+            product_obj = models.Product.objects_with_deleted.get(
+                pk=product_id)
+
+            if product_obj.is_deleted:
+                msg = "Product no longer available."
+                return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
+
+        except models.Product.DoesNotExist:
+            error_msg = {"detail": "Product not found."}
+            return response.Response(data=error_msg, status=status.HTTP_404_NOT_FOUND)
+
+        if models.Cart.objects.filter(session_id=session_id,
+                                      state=models.Cart.PENDING,
+                                      created_at__date=datetime.today().date()
+                                      ).exists():
+
+            cart = models.Cart.objects.get(session_id=session_id,
+                                           state=models.Cart.PENDING,
+                                           created_at__date=datetime.today().date()
+                                           )
+
+            if product_obj.current_stock > 0:
+                while product_quantity > 0 and product_obj.current_stock > 0:
+                    models.CartProduct.objects.create(
+                        product=product_obj, cart=cart)
+                    product_obj.current_stock -= 1
+                    product_obj.save()
+                    product_quantity -= 1
+            else:
+                msg = "Out of stock."
+                return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
+
+        else:
+            if product_obj.current_stock > 0:
+                cart = product_obj.products_cart.create(
+                    session_id=session_id)
+                product_obj.current_stock -= 1
+                product_obj.save()
+                product_quantity -= 1
+                while product_quantity > 0 and product_obj.current_stock > 0:
+                    models.CartProduct.objects.create(
+                        product=product_obj, cart=cart)
+                    product_obj.current_stock -= 1
+                    product_obj.save()
+                    product_quantity -= 1
+            else:
+                msg = "Out of stock."
+                return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
+
+        return response.Response(status=status.HTTP_200_OK)

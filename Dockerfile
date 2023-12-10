@@ -23,6 +23,7 @@ ENV PYTHONDONTWRITEBYTECODE="true" \
     APP_DATABASES__default__HOST="postgres" \
     APP_MEDIA_ROOT="/usr/src/app/media" \
     APP_MEDIA_URL="/media/" \
+    APP_DOMAIN="http://0.0.0.0:8000/"\
     DJANGO_SETTINGS_MODULE="core.settings" 
  
 

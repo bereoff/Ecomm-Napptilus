@@ -1,6 +1,10 @@
+import os
+
 from rest_framework import serializers
 
 from .models import Product, ProductAttribute, ProductCategory
+
+APP_DOMAIN = os.environ.get('APP_DOMAIN')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -34,3 +38,25 @@ class ProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = "__all__"
+
+
+class ProductCartSerializer(serializers.ModelSerializer):
+    product_id = serializers.CharField(source="pk")
+    quantity = serializers.SerializerMethodField()
+    image_url = serializers.CharField(source="url")
+
+    class Meta:
+        model = Product
+        fields = ["product_id", "description",
+                  "quantity", "price", "image_url"]
+
+    def get_quantity(self, obj):
+        quantity = obj.product_interm_cart.all().count()
+        return quantity
+
+    def to_representation(self, instance):
+        data = super(ProductCartSerializer, self).to_representation(instance)
+        url = data.get("image_url")
+        data.pop("image_url")
+        data.update({"image_url": str(APP_DOMAIN) + "media/" + str(url)})
+        return data
