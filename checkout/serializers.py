@@ -3,7 +3,7 @@ from datetime import datetime
 
 from rest_framework import serializers
 
-from .models import Product, ProductAttribute, ProductCategory
+from .models import Cart, Product, ProductAttribute, ProductCategory
 
 APP_DOMAIN = os.environ.get('APP_DOMAIN')
 
@@ -53,7 +53,7 @@ class ProductCartSerializer(serializers.ModelSerializer):
 
     def get_quantity(self, obj):
         quantity = obj.product_interm_cart.all().filter(
-            created_at__date=datetime.today().date()).count()
+            created_at__date=datetime.today().date(), cart__state=Cart.PENDING).count()
         return quantity
 
     def to_representation(self, instance):

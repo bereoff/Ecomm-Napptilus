@@ -4,7 +4,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (AddProductCartView, CartPurchasedView, ListCartView,
                     ListProductView, NewProductView, ProductAttributeView,
                     ProductCategoryView, ProductHardDeleteView,
-                    ProductSoftDeleteView, UpdateProductView)
+                    ProductInventoryAccuracyView, ProductSoftDeleteView,
+                    UpdateProductView)
 
 router = DefaultRouter()
 
@@ -28,4 +29,6 @@ urlpatterns = [
          name="add_to_cart"),
     path("products/cart/purchased/", CartPurchasedView.as_view(),
          name="purchased-cart"),
+    path("products/inventory-accuracy/", ProductInventoryAccuracyView.as_view(),
+         name="inventory-accuracy"),
 ]
