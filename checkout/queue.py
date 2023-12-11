@@ -1,4 +1,4 @@
-from rq import Queue, Retry
+from rq import Queue, Retry  # NOQA
 
 from redis import Redis
 
