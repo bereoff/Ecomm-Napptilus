@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from rest_framework import serializers
 
@@ -51,7 +52,8 @@ class ProductCartSerializer(serializers.ModelSerializer):
                   "quantity", "price", "image_url"]
 
     def get_quantity(self, obj):
-        quantity = obj.product_interm_cart.all().count()
+        quantity = obj.product_interm_cart.all().filter(
+            created_at__date=datetime.today().date()).count()
         return quantity
 
     def to_representation(self, instance):
