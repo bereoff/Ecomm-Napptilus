@@ -3,16 +3,14 @@ import os
 from datetime import datetime
 from decimal import Decimal
 
-from django.db.models import Case, IntegerField, When
+from django.db.models import Case, Count, IntegerField, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, response, status, views
 
-from api.email_api.send_email import send_mail
 from utils.product_handler import ProductHandler
 
 from . import models
-from .queue import queue
 from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
 
@@ -26,9 +24,9 @@ class ListProductView(generics.ListAPIView):
     def get_queryset(self):
         return models.Product.objects.annotate(
             custom_order=Case(
-                When(category__name="Cap", then=1),
+                When(category__name__iexact="Cap", then=1),
                 output_field=IntegerField())
-        ).order_by('custom_order').order_by('-created_at')
+        ).order_by("custom_order", "-created_at")
 
 
 class ProductCategoryView(generics.ListAPIView):
@@ -231,7 +229,10 @@ class ProductHardDeleteView(generics.DestroyAPIView):
 class ListCartView(views.APIView):
 
     def get(self, request):
-        session_id = request.COOKIES["session_id"]
+        try:
+            session_id = request.COOKIES["session_id"]
+        except Exception:
+            session_id = "Z4z9rppEXqNYLEJKWaG9ifs4Wiq8sR"
 
         cart = models.Cart.objects.filter(
             session_id=session_id, state=models.Cart.PENDING)
@@ -251,7 +252,11 @@ class ListCartView(views.APIView):
 class AddProductCartView(views.APIView):
     def post(self, request):
 
-        session_id = request.COOKIES["session_id"]
+        try:
+            session_id = request.COOKIES["session_id"]
+        except Exception:
+            session_id = "Z4z9rppEXqNYLEJKWaG9ifs4Wiq8sR"
+
         product_data = json.loads(request.body)
 
         product_id = product_data.get("product_id")
@@ -284,7 +289,11 @@ class AddProductCartView(views.APIView):
                     models.CartProduct.objects.create(
                         product=product_obj, cart=cart)
                     product_obj.current_stock -= 1
-                    product_obj.save()
+                    try:
+                        product_obj.save()
+                    except Exception as e:
+                        raise e
+
                     product_quantity -= 1
             else:
                 msg = "Out of stock."
@@ -312,10 +321,19 @@ class AddProductCartView(views.APIView):
 
 class CartPurchasedView(views.APIView):
     def post(self, request):
+        from api.email_api.send_email import (PromptEmail,
+                                              purchase_email_sending)
+
+        from .queue import Retry, queue
 
         customer_data = json.loads(request.body)
 
-        session_id = request.COOKIES["session_id"]
+        prompt_email = PromptEmail(customer_data)
+
+        try:
+            session_id = request.COOKIES["session_id"]
+        except Exception:
+            session_id = "Z4z9rppEXqNYLEJKWaG9ifs4Wiq8sR"
 
         cart = get_object_or_404(models.Cart, session_id=session_id,
                                  state=models.Cart.PENDING,
@@ -328,9 +346,65 @@ class CartPurchasedView(views.APIView):
             return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
 
         try:
-            job = queue.enqueue(send_mail, customer_data, SENDGRID_API_KEY)
-
+            job = queue.enqueue(purchase_email_sending,
+                                customer_data, SENDGRID_API_KEY, retry=Retry(max=3))
+            print(prompt_email.send_prompt_email_purchase())
         except Exception as e:
             print(e)
 
         return response.Response(data={"detail": {"job_id": job.id}}, status=status.HTTP_201_CREATED)
+
+
+class ProductInventoryAccuracyView(views.APIView):
+    def put(self, request):
+        from api.email_api.send_email import PromptEmail, report_email_sending
+
+        from .queue import queue
+
+        email = request.data.get("analyst_email")
+
+        report = []
+        products_in_carts = models.CartProduct.objects.all().values(
+            "product").annotate(total=Count("product")).order_by("product")
+
+        products_in_stock = models.Product.objects.filter(
+            pk__in=[product.get("product") for product in products_in_carts]).order_by("id")
+
+        for product_in_cart, product_in_stock in zip(products_in_carts, products_in_stock):
+
+            product_cart = product_in_cart.get("product")
+            total_in_cart = product_in_cart.get("total")
+
+            product_stock = product_in_stock.id
+
+            if product_cart == product_stock:
+                if product_in_stock.initial_stock == (product_in_stock.current_stock + total_in_cart):
+                    report.append(
+                        dict(
+                            product=product_in_stock.id,
+                            description=product_in_stock.description,
+                            actual_stock=product_in_stock.current_stock,
+                            total_purchased=total_in_cart,
+                            status="in compliance",
+                            report_date=datetime.now()
+                        )
+                    )
+                else:
+                    report.append(
+                        dict(
+                            product=product_in_stock.id,
+                            description=product_in_stock.description,
+                            actual_stock=product_in_stock.current_stock,
+                            total_purchased=total_in_cart,
+                            status="non-compliance",
+                            report_date=datetime.now()
+                        )
+                    )
+        try:
+            queue.enqueue(report_email_sending, email, SENDGRID_API_KEY)
+            prompt_email = PromptEmail.send_prompt_email_report(email)
+            print(prompt_email)
+        except Exception as e:
+            print(e)
+
+        return response.Response(data={"report": report}, status=status.HTTP_200_OK)
