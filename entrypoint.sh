@@ -7,8 +7,8 @@ set -e
 
 # # Database migrations
 echo " "
-echo "###############################################"
-echo "Applying database migrations"
+echo "...................................."
+echo "Applying database migrations ..."
 python manage.py migrate
 
 # # Test Pipeline
@@ -27,8 +27,10 @@ find ./fixture-images -iname '*t-shirt*' -exec cp {} ./media/product/T-Shirt/ \;
 find ./fixture-images -iname '*cap*' -exec cp {} ./media/product/Cap/ \;
 
 echo " "
-echo "###############################################"
-echo "Applying fixtures..."
+echo "...................................."
+echo "Applying fixtures ..."
 python manage.py custom_load_fixture
+echo " "
+
 
 $@
