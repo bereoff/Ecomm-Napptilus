@@ -55,7 +55,7 @@ class PromptEmail():
         return REPORT_MAIL
 
 
-# ↓↓↓↓↓ queue sendgrid backend functions
+# ↓↓↓↓↓ sendgrid backend functions
 
 
 def purchase_email_sending(customer_data, SENDGRID_API_KEY):
