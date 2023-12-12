@@ -8,8 +8,8 @@ set -e
 # # Database migrations
 echo " "
 echo "###############################################"
-# echo "Applying database migrations"
-# python manage.py migrate
+echo "Applying database migrations"
+python manage.py migrate
 
 # # Test Pipeline
 # echo " "
@@ -25,5 +25,10 @@ mkdir -p ./media/product/Cap
 # Transfer images to media folder
 find ./fixture-images -iname '*t-shirt*' -exec cp {} ./media/product/T-Shirt/ \;
 find ./fixture-images -iname '*cap*' -exec cp {} ./media/product/Cap/ \;
+
+echo " "
+echo "###############################################"
+echo "Applying fixtures..."
+python manage.py custom_load_fixture
 
 $@
