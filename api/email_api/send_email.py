@@ -112,7 +112,7 @@ def report_email_sending(email, SENDGRID_API_KEY):
                     <title>Order Status</title>
                 </head>
                 <body>
-                    <p>Attached is the link to the inventory report of the products <a href="https://napptilus.com/">our website</a>.</p>
+                    <p>Attached is the link to the inventory report of the products <a href="https://napptilus.com/"></a>.</p>
                     <p>Please do not unsubscribe from receiving this email.</p>
                     <p>If you have any questions or issues, please contact your supervisor.</p>
                 </body>
