@@ -39,7 +39,12 @@ RUN pip install -r requirements.txt \
 COPY . .
 
 COPY ./entrypoint.sh .
+COPY ./task_trigger.py .
+
+
 RUN sed -i 's/\r$//g' /usr/src/app/entrypoint.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
+
+
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]

@@ -59,17 +59,24 @@ class Command(BaseCommand):
                     ("attribute", line.get("product_attribute_id"), e))
 
             try:
-                product_obj, product_created = Product.objects.get_or_create(
-                    main_color=line.get("product_main_color"),
-                    secondary_color=line.get("product_secondary_color"),
-                    brand=line.get("product_brand"),
-                    price=line.get("product_price"),
-                    initial_stock=line.get("product_initial_stock"),
-                    current_stock=line.get("product_current_stock"),
-                    description=line.get("product_description"),
-                    url=line.get("product_url"),
-                    category=category_obj
-                )
+                if Product.objects.filter(pk=line.get("product_id")).exists():
+                    product_obj = product.objects.filter(
+                        pk=line.get("product_id")).first
+                    product_created = False
+
+                else:
+                    product_obj, product_created = Product.objects.get_or_create(
+                        pk=line.get("product_id"),
+                        main_color=line.get("product_main_color"),
+                        secondary_color=line.get("product_secondary_color"),
+                        brand=line.get("product_brand"),
+                        price=line.get("product_price"),
+                        initial_stock=line.get("product_initial_stock"),
+                        current_stock=line.get("product_current_stock"),
+                        description=line.get("product_description"),
+                        url=line.get("product_url"),
+                        category=category_obj
+                    )
                 if product_created:
                     product_count += 1
                 product.append(("product", product_obj, product_created))
@@ -77,23 +84,24 @@ class Command(BaseCommand):
                 product.append(("product", line.get("product_id"), e))
 
             try:
-                if not ProductAttributeValue.objects.filter(pk=line.get("product_attribute_value_id")).exists():
-
-                    product_attribute_value_obj, attribute_value_created = ProductAttributeValue.objects.get_or_create(
-                        product=product_obj,
-                        attribute=attribute_obj,
-                        value=line.get("product_attribute_value_value")
-                    )
-                else:
+                if ProductAttributeValue.objects.filter(pk=line.get("product_attribute_value_id")).exists():
                     product_attribute_value_obj = ProductAttributeValue.objects.filter(
                         pk=line.get("product_attribute_value_id")).first()
                     attribute_value_created = False
 
-                    if attribute_value_created:
-                        product_attribute_value_count += 1
+                else:
+                    product_attribute_value_obj, attribute_value_created = ProductAttributeValue.objects.get_or_create(
+                        pk=line.get("product_attribute_value_id"),
+                        product=product_obj,
+                        attribute=attribute_obj,
+                        value=line.get("product_attribute_value_value")
+                    )
 
-                    product_attribute_value.append("attribute value",
-                                                   (product_attribute_value_obj, attribute_value_created))
+                if attribute_value_created:
+                    product_attribute_value_count += 1
+
+                product_attribute_value.append("attribute value",
+                                               (product_attribute_value_obj, attribute_value_created))
 
             except Exception as e:
                 product_attribute_value.append(
