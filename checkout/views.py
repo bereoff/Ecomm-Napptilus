@@ -324,8 +324,6 @@ class CartPurchasedView(views.APIView):
         from api.email_api.send_email import (PromptEmail,
                                               purchase_email_sending)
 
-        from .queue import Retry, queue
-
         customer_data = json.loads(request.body)
 
         prompt_email = PromptEmail(customer_data)
@@ -346,20 +344,17 @@ class CartPurchasedView(views.APIView):
             return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
 
         try:
-            job = queue.enqueue(purchase_email_sending,
-                                customer_data, SENDGRID_API_KEY, retry=Retry(max=3))
+            purchase_email_sending(customer_data, SENDGRID_API_KEY)
             print(prompt_email.send_prompt_email_purchase())
         except Exception as e:
             print(e)
 
-        return response.Response(data={"detail": {"job_id": job.id}}, status=status.HTTP_201_CREATED)
+        return response.Response(status=status.HTTP_200_OK)
 
 
 class ProductInventoryAccuracyView(views.APIView):
     def put(self, request):
         from api.email_api.send_email import PromptEmail, report_email_sending
-
-        from .queue import queue
 
         email = request.data.get("analyst_email")
 
@@ -401,7 +396,7 @@ class ProductInventoryAccuracyView(views.APIView):
                         )
                     )
         try:
-            queue.enqueue(report_email_sending, email, SENDGRID_API_KEY)
+            report_email_sending(email, SENDGRID_API_KEY)
             prompt_email = PromptEmail.send_prompt_email_report(email)
             print(prompt_email)
         except Exception as e:
