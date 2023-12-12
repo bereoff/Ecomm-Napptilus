@@ -5,11 +5,10 @@ FROM python:3.12.0-slim-bullseye AS app
 WORKDIR /usr/src/app
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential curl libpq-dev \
+  && apt-get install -y --no-install-recommends build-essential curl libpq-dev cron -y nano\
   && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man \
   && apt-get clean \ 
-  && mkdir -p /usr/src/app/media/
-
+  && mkdir -p /usr/src/app/media/ 
 
 ENV PYTHONDONTWRITEBYTECODE="true" \
     PYTHONUNBUFFERED="true" \
@@ -24,8 +23,6 @@ ENV PYTHONDONTWRITEBYTECODE="true" \
     APP_MEDIA_ROOT="/usr/src/app/media" \
     APP_MEDIA_URL="/media/" \
     APP_DOMAIN="http://0.0.0.0:8000/"\
-    APP_REDIS_HOST="redis"\
-    APP_REDIS_PORT=6379\
     DJANGO_SETTINGS_MODULE="core.settings" 
  
 
@@ -38,13 +35,20 @@ RUN pip install -r requirements.txt \
 # copy project
 COPY . .
 
+#cronjob
+COPY trigger.sh .
+COPY crontab /etc/cron.d/crontab
+RUN chmod 0600 /etc/cron.d/crontab
+RUN crontab -u root /etc/cron.d/crontab
+RUN chmod +x /usr/src/app/trigger.sh
+
+#entrypoynt
 COPY ./entrypoint.sh .
-COPY ./task_trigger.py .
-
-
 RUN sed -i 's/\r$//g' /usr/src/app/entrypoint.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
 
 
+RUN service cron start
+CMD cron
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]

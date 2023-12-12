@@ -5,7 +5,7 @@ set -e
 ## Fixture
 # Transfer images to media folder
 
-# # Database migrations
+# Database migrations
 echo " "
 echo "...................................."
 echo "Applying database migrations ..."
