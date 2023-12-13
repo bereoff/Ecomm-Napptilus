@@ -11,7 +11,7 @@ from rest_framework.exceptions import APIException, ParseError
 
 from utils.product_handler import ProductHandler
 
-from . import models
+from . import filters, models
 from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
 
@@ -21,6 +21,7 @@ SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 class ListProductView(generics.ListAPIView):
     queryset = models.Product.objects.all()
     serializer_class = ProductSerializer
+    rql_filter_class = filters.ProductFilters
 
     def get_queryset(self):
         return models.Product.objects.annotate(
