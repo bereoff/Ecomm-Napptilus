@@ -23,7 +23,7 @@ class PromptEmail():
 
         PURCHASE_MAIL = f"""
         From: Napptilus Ecomm <no-reply@napptilus-ecomm.com>
-        To: {self.contact_data.get("email")}
+        To: email@example-napptilus.com
         Subject: f"Ecomm-Napptilus Order {order_number} 🎁🎁"
 
         Hello,
@@ -35,7 +35,7 @@ class PromptEmail():
 
         return PURCHASE_MAIL
 
-    def send_prompt_email_report(email):
+    def send_prompt_email_report():
         from datetime import datetime
 
         import pytz
@@ -44,7 +44,7 @@ class PromptEmail():
 
         REPORT_MAIL = f"""
         From: Napptilus Ecomm <tech@napptilus-ecomm.com>
-        To: {email}
+        To: email@example-napptilus.com
         Subject: f"Inventory accuracy report submission - {datetime.now(pytz.utc)}"
 
         Attached is the link to the inventory report of the products "https://napptilus.com/".

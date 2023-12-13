@@ -7,7 +7,7 @@ touch /usr/src/app/logs/crontab.log
 # script permission
 chmod +x /usr/src/app/trigger.sh
 # add to crontab
-echo "0 * * * * /usr/src/app/trigger.sh >> /usr/src/app/logs/crontab.log 2>&1" > /etc/crontab
+echo "* * * * * /usr/src/app/trigger.sh >> /usr/src/app/logs/crontab.log 2>&1" > /etc/crontab
 # start crontab
 crontab /etc/crontab
 # start cron service

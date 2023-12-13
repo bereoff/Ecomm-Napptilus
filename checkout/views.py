@@ -7,6 +7,7 @@ from django.db.models import Case, Count, IntegerField, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, response, status, views
+from rest_framework.exceptions import APIException, ParseError
 
 from utils.product_handler import ProductHandler
 
@@ -14,7 +15,8 @@ from . import models
 from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
 
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+# SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+SENDGRID_API_KEY = None
 
 
 class ListProductView(generics.ListAPIView):
@@ -42,8 +44,10 @@ class ProductAttributeView(generics.ListAPIView):
 
 class NewProductView(views.APIView):
     def post(self, request):
-
-        product_data = request.data.dict()
+        try:
+            product_data = request.data.dict()
+        except ParseError as e:
+            return e
 
         try:
             file = request.FILES[next(iter(request.FILES))]
@@ -118,7 +122,10 @@ class UpdateProductView(generics.UpdateAPIView):
 
     def put(self, request, *args, **kwargs):
 
-        product_data = request.data.dict()
+        try:
+            product_data = request.data.dict()
+        except ParseError as e:
+            return e
 
         try:
             file = request.FILES[next(iter(request.FILES))]
@@ -201,7 +208,11 @@ class UpdateProductView(generics.UpdateAPIView):
 
 class ProductSoftDeleteView(views.APIView):
     def put(self, request):
-        product_data = json.loads(request.body)
+
+        try:
+            product_data = json.loads(request.body)
+        except APIException as e:
+            return e
 
         products = list()
         for product in product_data:
@@ -257,7 +268,10 @@ class AddProductCartView(views.APIView):
         except Exception:
             session_id = "Z4z9rppEXqNYLEJKWaG9ifs4Wiq8sR"
 
-        product_data = json.loads(request.body)
+        try:
+            product_data = json.loads(request.body)
+        except APIException as e:
+            return e
 
         product_id = product_data.get("product_id")
         product_quantity = product_data.get("quantity")
@@ -324,7 +338,10 @@ class CartPurchasedView(views.APIView):
         from api.email_api.send_email import (PromptEmail,
                                               purchase_email_sending)
 
-        customer_data = json.loads(request.body)
+        try:
+            customer_data = json.loads(request.body)
+        except APIException as e:
+            return e
 
         prompt_email = PromptEmail(customer_data)
 
@@ -344,8 +361,12 @@ class CartPurchasedView(views.APIView):
             return response.Response(data={"detail": msg}, status=status.HTTP_200_OK)
 
         try:
-            purchase_email_sending(customer_data, SENDGRID_API_KEY)
-            print(prompt_email.send_prompt_email_purchase())
+
+            if SENDGRID_API_KEY is not None:
+                purchase_email_sending(customer_data, SENDGRID_API_KEY)
+                print(prompt_email.send_prompt_email_purchase())
+            else:
+                print(prompt_email.send_prompt_email_purchase())
         except Exception as e:
             print(e)
 
@@ -356,7 +377,10 @@ class ProductInventoryAccuracyView(views.APIView):
     def put(self, request):
         from api.email_api.send_email import PromptEmail, report_email_sending
 
-        email = request.data.get("analyst_email")
+        try:
+            email = request.data.get("analyst_email")
+        except ParseError as e:
+            return e
 
         report = []
         products_in_carts = models.CartProduct.objects.all().values(
@@ -396,9 +420,13 @@ class ProductInventoryAccuracyView(views.APIView):
                         )
                     )
         try:
-            report_email_sending(email, SENDGRID_API_KEY)
-            prompt_email = PromptEmail.send_prompt_email_report(email)
-            print(prompt_email)
+            if SENDGRID_API_KEY is not None:
+                report_email_sending(email, SENDGRID_API_KEY)
+                prompt_email = PromptEmail.send_prompt_email_report()
+                print(prompt_email)
+            else:
+                prompt_email = PromptEmail.send_prompt_email_report()
+                print(prompt_email)
         except Exception as e:
             print(e)
 
