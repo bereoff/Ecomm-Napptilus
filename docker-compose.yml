@@ -40,4 +40,10 @@ services:
       - POSTGRES_DB=ecomm
     volumes:
       - "app_pg_data:/var/lib/postgresql/data"
+  
+  django-cron:
+    image: ecomm-napptilus-django-cron-1
+    entrypoint: ./crontab.sh
+    depends_on:
+      - django
 
