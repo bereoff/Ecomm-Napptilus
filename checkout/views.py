@@ -15,8 +15,7 @@ from . import models
 from .serializers import (ProductAttributeSerializer, ProductCartSerializer,
                           ProductCategorySerializer, ProductSerializer)
 
-# SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-SENDGRID_API_KEY = None
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 
 
 class ListProductView(generics.ListAPIView):
