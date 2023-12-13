@@ -24,7 +24,7 @@ $ git clone git@github.com:bereoff/Ecomm-Napptilus.git
 As the next step, you need to be in the project's root directory, where the docker-compose.yml file is located, and run the command:
 
 <p align="center">
-  <img src="https://github.com/bereoff/Ecomm-Napptilus/blob/dev-branch/project_images/project-root.png" />
+  <img src="https://github.com/bereoff/Ecomm-Napptilus/blob/main/project_images/project-root.png" />
 </p>
 
 ```
