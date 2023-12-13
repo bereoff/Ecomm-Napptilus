@@ -3,7 +3,7 @@
 Below is the basic architecture, where the focus of this project was on the backend and the preparation of interactions with the frontend and external APIs.
 
 <p align="center">
-  <img src="https://github.com/bereoff/Ecomm-Napptilus/blob/dev-branch/project_images/Napptilus.png" />
+  <img src="https://github.com/bereoff/Ecomm-Napptilus/blob/main/project_images/Napptilus.png" />
 </p>
 
 ---
