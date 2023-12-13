@@ -132,6 +132,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 100,
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    'DEFAULT_FILTER_BACKENDS': ['dj_rql.drf.RQLFilterBackend'],
 }
 
 from dynaconf import DjangoDynaconf  # noqa
