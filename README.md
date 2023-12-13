@@ -13,6 +13,7 @@ The following steps will be presented for the local project usage.
 > ## Prerequisites:
 - Docker
 - Docker-Compose
+- API_KEY from Sendgrid, in order to achieve the email send routine well execution
 
 First, you need to identify the location where the project repository will be cloned.
 
