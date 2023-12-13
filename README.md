@@ -21,14 +21,14 @@ Once the location is defined, run the following command to clone it:
 $ git clone git@github.com:bereoff/Ecomm-Napptilus.git
 ```
 
-As the next step, you need to be in the project's root directory, where the docker-compose.yml file is located, and run the command:
+As the next step, you need to be in the project's root directory, where the run.sh file is located, and run the command:
 
 <p align="center">
   <img src="https://github.com/bereoff/Ecomm-Napptilus/blob/main/project_images/project-root.png" />
 </p>
 
 ```
-$ docker-compose up --build
+$ ./run.sh
 ```
 
 This command will ensure that all necessary container images are downloaded to your computer and will start three services:
